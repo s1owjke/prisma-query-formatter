@@ -1,12 +1,14 @@
 # Prisma Query Formatter
 
-This is small, zero-dependency utility correctly stringifies Prisma queries by substituting placeholders with their corresponding values (internally, Prisma uses its own Rust implementation for stringifying params).
+This small zero-dependency utility correctly formats Prisma queries by substituting placeholders with their corresponding values.
 
-Keep in mind that this utility is designed solely for logging purposes, and Prisma irreversibly transforms certain parameter types, such as [blobs](https://github.com/prisma/prisma-engines/blob/5.13.0/quaint/src/ast/values.rs#L571).
+Internally, Prisma uses its [own](https://github.com/prisma/prisma-engines/blob/5.13.0/quaint/src/ast/values.rs#L547) Rust implementation for stringifying params, so you couldn't just use `JSON.parse` to convert them back to an array (sometimes it's not valid json, like double quotes are not escaped in strings).
+
+Note that this utility is designed for logging purposes only, because Prisma irreversibly converts some types of parameters, such as  [blobs](https://github.com/prisma/prisma-engines/blob/5.13.0/quaint/src/ast/values.rs#L571).
 
 ## How to use it
 
-Just register a query event handler and use the `formatPrismaQuery` util to substitute the query params (don't forget to enable [event-based](https://www.prisma.io/docs/orm/reference/prisma-client-reference#log) logging in your Prisma client configuration).
+Just register a query event handler and use the `formatQuery` util to substitute the query params (don't forget to enable [event-based](https://www.prisma.io/docs/orm/reference/prisma-client-reference#log) logging in your Prisma client configuration).
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
@@ -35,7 +37,7 @@ await db.user.findUnique({
 Will be logged to the console as:
 
 ```text
-SELECT `example`.`User`.`id` FROM `example`.`User` WHERE (`example`.`User`.`email` = "john@example.com" AND 1=1) LIMIT 1 OFFSET 0
+SELECT `User`.`id` FROM `User` WHERE `User`.`email` = "john@example.com"
 ```
 
 ## Query formatting
@@ -58,7 +60,7 @@ Will be logged with params as:
 SELECT DISTINCT role FROM User WHERE status = "Active"
 ```
 
-To escape whitespace symbols like `\f\n\r\t\v` in the params, use the `escapeParams` option, this will allow you to make your logs more concise.
+To escape whitespace symbols such as `\f\n\r\t\v` in params, use the `escapeParams` option, this will allow you to output multiline strings more concisely (all your logs will be on one line).
 
 ```typescript
 prisma.$on("query", (e) => {
