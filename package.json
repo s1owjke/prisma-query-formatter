@@ -1,0 +1,30 @@
+{
+  "name": "prisma-query-formatter",
+  "version": "0.1.0",
+  "description": "Small utility for Prisma query formatting and param substitution",
+  "license": "MIT",
+  "keywords": [
+    "prisma",
+    "query",
+    "logging"
+  ],
+  "author": "s1owjke",
+  "homepage": "https://github.com/s1owjke/prisma-query-formatter",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "build:watch": "rm -rf dist && tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.5"
+  }
+}
