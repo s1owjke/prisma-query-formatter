@@ -1,6 +1,8 @@
 # Prisma Query Formatter
 
-This small zero-dependency utility correctly formats Prisma queries by substituting placeholders with their corresponding values.
+[![Published on npm](https://img.shields.io/npm/v/prisma-query-formatter?color=brightgreen)](https://www.npmjs.com/package/prisma-query-formatter) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+This small zero-dependency utility correctly formats Prisma queries by substituting placeholders with their corresponding values, support all databases including PostgreSQL.
 
 Internally, Prisma uses its [own](https://github.com/prisma/prisma-engines/blob/5.13.0/quaint/src/ast/values.rs#L547) Rust implementation for stringifying params, so you couldn't just use `JSON.parse` to convert them back to an array (sometimes it's not valid json, like double quotes are not escaped in strings).
 
@@ -66,4 +68,10 @@ To escape whitespace symbols such as `\f\n\r\t\v` in params, use the `escapePara
 prisma.$on("query", (e) => {
   console.log(formatQuery(e.query, e.params, { escapeParams: true }));
 });
+```
+
+And then, they will be displayed like this:
+
+```text
+SELECT `Post`.`id` FROM `Post` WHERE `Post`.`title` = "first\nsecond"
 ```
