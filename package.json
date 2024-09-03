@@ -1,12 +1,15 @@
 {
   "name": "prisma-query-formatter",
-  "version": "0.1.2",
-  "description": "Small utility for Prisma query formatting and param substitution",
+  "version": "0.1.3",
+  "description": "Small utility for Prisma query formatting and param substitution in logs",
   "license": "MIT",
   "keywords": [
+    "database",
+    "logging",
     "prisma",
-    "query",
-    "logging"
+    "prisma-client",
+    "prisma-extension",
+    "query"
   ],
   "author": "s1owjke",
   "homepage": "https://github.com/s1owjke/prisma-query-formatter",

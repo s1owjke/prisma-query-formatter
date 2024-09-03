@@ -6,4 +6,5 @@ Thumbs.db
 
 dist
 node_modules
+
 yarn-error.log
