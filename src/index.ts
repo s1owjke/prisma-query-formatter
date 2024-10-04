@@ -15,8 +15,62 @@ const escapeWhitespace = (param: string) => {
 };
 
 export const parseParams = (rawParams: string) => {
-  const values = rawParams.replace(/^\[([^]*)]$/, "$1");
-  return values ? values.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/) : [];
+  const input = rawParams.replace(/^\[([^]*)]$/, "$1");
+  const params: string[] = [];
+
+  if (!input) return params;
+
+  const stack: string[] = [];
+  let currentBuffer = "";
+  let inQuotes = false;
+  let inXml = false;
+
+  for (let i = 0; i < input.length; i++) {
+    let currentChar = input[i];
+
+    if (currentChar === '"' && input[i - 1] !== "\\") {
+      inQuotes = !inQuotes;
+    }
+
+    if (inQuotes) {
+      currentBuffer += currentChar;
+      continue;
+    } else if (currentChar === "<" && input.substring(i, i + 15) === "<{} bytes blob>") {
+      params.push("<{} bytes blob>");
+      i += 15;
+      continue;
+    }
+
+    if (currentChar === "<") {
+      inXml = true;
+      if (input[i + 1] === "/" && stack[stack.length - 1] === "<") {
+        stack.pop();
+      } else if (input[i + 1] !== "?" && input[i + 1] !== "!") {
+        stack.push("<");
+      }
+    } else if (currentChar === "{") {
+      stack.push("{");
+    } else if (currentChar === "}" && stack[stack.length - 1] === "{") {
+      stack.pop();
+    } else if (currentChar === "[") {
+      stack.push("[");
+    } else if (currentChar === "]" && stack[stack.length - 1] === "[") {
+      stack.pop();
+    }
+
+    if (currentChar === "," && !stack.length && !inXml) {
+      params.push(currentBuffer);
+      currentBuffer = "";
+    } else {
+      currentBuffer += currentChar;
+    }
+  }
+
+  if (currentBuffer) {
+    params.push(currentBuffer);
+  }
+
+  return params;
 };
 
 export const formatQuery = (query: string, rawParams: string, options: FormatOptions = {}): string => {
