@@ -48,6 +48,8 @@ export const parseParams = (rawParams: string) => {
       } else if (input[i + 1] !== "?" && input[i + 1] !== "!") {
         stack.push("<");
       }
+    } else if (currentChar === ">") {
+      inXml = false;
     } else if (currentChar === "{") {
       stack.push("{");
     } else if (currentChar === "}" && stack[stack.length - 1] === "{") {
