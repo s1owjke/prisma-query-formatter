@@ -1,5 +1,6 @@
 type FormatOptions = {
   escapeParams?: boolean;
+  throwOnError?: boolean;
 };
 
 const escapeWhitespace = (param: string) => {
@@ -19,9 +20,18 @@ export const parseParams = (rawParams: string) => {
 };
 
 export const formatQuery = (query: string, rawParams: string, options: FormatOptions = {}): string => {
+  query = query.replace(/\s/g, " ").replace(/\s{2,}/g, " ");
+
+  const placeholders = query.match(/\?/g) || [];
   const params = parseParams(rawParams);
 
-  query = query.replace(/\s/g, " ").replace(/\s{2,}/g, " ");
+  if (placeholders.length !== params.length) {
+    if (options.throwOnError) {
+      throw new Error("Number of placeholders and params doesn't match");
+    } else {
+      return `${query} ${rawParams}`;
+    }
+  }
 
   if (params.length > 0) {
     query = query.replace(/(\?|\$\d+)/g, () => {

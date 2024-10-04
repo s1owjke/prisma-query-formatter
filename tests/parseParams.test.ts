@@ -20,4 +20,8 @@ describe("params parsing", () => {
   test("string with nested quotes", () => {
     expect(parseParams(`["value with "nested" quotes"]`)).toEqual([`"value with "nested" quotes"`]);
   });
+
+  test("mixed values", () => {
+    expect(parseParams(`[1,"string",<{} bytes blob>]`)).toEqual([`1`, `"string"`, `<{} bytes blob>`]);
+  });
 });

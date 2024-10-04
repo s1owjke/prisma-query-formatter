@@ -42,6 +42,13 @@ Will be logged to the console as:
 SELECT `User`.`id` FROM `User` WHERE `User`.`email` = "john@example.com"
 ```
 
+## Error handling
+
+The library now performs a validation to ensure that the number of placeholders in a query matches the number of params, as a mismatch may indicate an error.
+
+- If there is a mismatch and the option `throwOnError` is set to true, it will throw an error
+- If `throwOnError` is set to false (default value), it will return the concatenated query and parameters as is
+
 ## Query formatting
 
 All whitespace symbols in multiline queries (usually raw queries written manually) will be replaced with single space, for example:
@@ -62,7 +69,7 @@ Will be logged with params as:
 SELECT DISTINCT role FROM User WHERE status = "Active"
 ```
 
-To escape whitespace symbols such as `\f\n\r\t\v` in params, use the `escapeParams` option, this will allow you to output multiline strings more concisely (all your logs will be on one line).
+To escape whitespace symbols such as `\f\n\r\t\v` in params, use the `escapeParams` option (false by default), this will allow you to output multiline strings more concisely (all your logs will be on one line).
 
 ```typescript
 prisma.$on("query", (e) => {
