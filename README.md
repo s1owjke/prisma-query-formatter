@@ -49,6 +49,18 @@ The library now performs a validation to ensure that the number of placeholders 
 - If there is a mismatch and the option `throwOnError` is set to true, it will throw an error
 - If `throwOnError` is set to false (default value), it will return the concatenated query and parameters as is
 
+Here is an example with error handler:
+
+```typescript
+prisma.$on("query", (e) => {
+  try {
+    console.log(formatQuery(e.query, e.params, { throwOnError: true }));
+  } catch {
+    console.log(`${e.query} ${e.params}`);
+  }
+});
+```
+
 ## Query formatting
 
 All whitespace symbols in multiline queries (usually raw queries written manually) will be replaced with single space, for example:
