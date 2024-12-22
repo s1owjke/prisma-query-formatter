@@ -11,6 +11,11 @@ describe("query formatting", () => {
     expect(log).toEqual(`SELECT * FROM Post WHERE status = "active" AND views >= 500`);
   });
 
+  test("with parameters and placeholders in the postgres format", () => {
+    const log = formatQuery("SELECT id FROM Client OFFSET $1", `[500]`);
+    expect(log).toEqual(`SELECT id FROM Client OFFSET 500`);
+  });
+
   test("whitespace cleanup", () => {
     const log = formatQuery("SELECT\n  COUNT(*)\nFROM\n  Post\nWHERE\n  status = ?", `["active"]`);
     expect(log).toEqual(`SELECT COUNT(*) FROM Post WHERE status = "active"`);

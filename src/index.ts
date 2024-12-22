@@ -78,7 +78,7 @@ export const parseParams = (rawParams: string) => {
 export const formatQuery = (query: string, rawParams: string, options: FormatOptions = {}): string => {
   query = query.replace(/\s/g, " ").replace(/\s{2,}/g, " ");
 
-  const placeholders = query.match(/\?/g) || [];
+  const placeholders = query.match(/(\?|\$\d+)/g) || [];
   const params = parseParams(rawParams);
 
   if (placeholders.length !== params.length) {
