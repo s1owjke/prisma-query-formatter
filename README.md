@@ -117,6 +117,30 @@ const limitLength = (param: string) => {
 };
 
 prisma.$on("query", (e) => {
-  console.log(formatQuery(e.query, e.params, { paramTransformer: limitLength(100) }));
+  console.log(formatQuery(e.query, e.params, { paramTransformer: limitLength() }));
 });
+```
+
+## Migrations
+
+How to upgrade from older versions.
+
+### 1.0.0
+
+The `escapeParams` option has been removed. The library now supports a custom `paramTransformer` that allows you to control param rendering and exports the `escapeWhitespace` function instead.
+
+Before (version 0.2.2 and earlier):
+
+```typescript
+import { formatQuery } from "prisma-query-formatter";
+
+formatQuery(query, params, { escapeParams: true });
+````
+
+After:
+
+```typescript
+import { formatQuery, escapeWhitespace } from "prisma-query-formatter";
+
+formatQuery(query, params, { paramTransformer: escapeWhitespace });
 ```
