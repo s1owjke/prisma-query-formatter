@@ -1,4 +1,4 @@
-import { formatQuery } from "../src";
+import { formatQuery, escapeWhitespace as paramTransformer } from "../src";
 
 describe("query formatting", () => {
   test("without params", () => {
@@ -31,8 +31,13 @@ describe("query formatting", () => {
     expect(log).toEqual(`SELECT * FROM Post WHERE content = " \f\n\r\t\v"`);
   });
 
-  test("with params escaping", () => {
-    const log = formatQuery("SELECT * FROM Post WHERE content = ?", `[" \f\n\r\t\v"]`, { escapeParams: true });
+  test("with escaping using param transformer", () => {
+    const log = formatQuery("SELECT * FROM Post WHERE content = ?", `[" \f\n\r\t\v"]`, { paramTransformer });
     expect(log).toEqual(`SELECT * FROM Post WHERE content = " \\f\\n\\r\\t\\v"`);
+  });
+
+  test("should throw when placeholders and params don't match", () => {
+    const log = () => formatQuery("SELECT * FROM Post WHERE status = ?", `[]`, { throwOnError: true });
+    expect(log).toThrow("Number of placeholders and params doesn't match");
   });
 });

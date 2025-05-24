@@ -1,9 +1,9 @@
 type FormatOptions = {
-  escapeParams?: boolean;
   throwOnError?: boolean;
+  paramTransformer?: (param: string) => string;
 };
 
-const escapeWhitespace = (param: string) => {
+export const escapeWhitespace = (param: string) => {
   return param.replace(/[\f\n\r\t\v]/g, (match) => {
     if (match === "\f") return "\\f";
     if (match === "\n") return "\\n";
@@ -14,11 +14,11 @@ const escapeWhitespace = (param: string) => {
   });
 };
 
-export const parseParams = (rawParams: string) => {
-  const input = rawParams.replace(/^\[([^]*)]$/, "$1");
-  const params: string[] = [];
+export const parseParams = (params: string) => {
+  const input = params.replace(/^\[([^]*)]$/, "$1");
+  const parsedParams: string[] = [];
 
-  if (!input) return params;
+  if (!input) return parsedParams;
 
   const stack: string[] = [];
   let currentBuffer = "";
@@ -36,7 +36,7 @@ export const parseParams = (rawParams: string) => {
       currentBuffer += currentChar;
       continue;
     } else if (currentChar === "<" && input.substring(i, i + 15) === "<{} bytes blob>") {
-      params.push("<{} bytes blob>");
+      parsedParams.push("<{} bytes blob>");
       i += 15;
       continue;
     }
@@ -61,7 +61,7 @@ export const parseParams = (rawParams: string) => {
     }
 
     if (currentChar === "," && !stack.length && !inXml) {
-      params.push(currentBuffer);
+      parsedParams.push(currentBuffer);
       currentBuffer = "";
     } else {
       currentBuffer += currentChar;
@@ -69,32 +69,36 @@ export const parseParams = (rawParams: string) => {
   }
 
   if (currentBuffer) {
-    params.push(currentBuffer);
+    parsedParams.push(currentBuffer);
   }
 
-  return params;
+  return parsedParams;
 };
 
-export const formatQuery = (query: string, rawParams: string, options: FormatOptions = {}): string => {
-  query = query.replace(/\s/g, " ").replace(/\s{2,}/g, " ");
+export const formatQuery = (query: string, params: string, options: FormatOptions = {}): string => {
+  try {
+    query = query.replace(/\s/g, " ").replace(/\s{2,}/g, " ");
 
-  const placeholders = query.match(/(\?|\$\d+)/g) || [];
-  const params = parseParams(rawParams);
+    const placeholders = query.match(/(\?|\$\d+)/g) || [];
+    const parsedParams = parseParams(params);
 
-  if (placeholders.length !== params.length) {
-    if (options.throwOnError) {
+    if (placeholders.length !== parsedParams.length) {
       throw new Error("Number of placeholders and params doesn't match");
-    } else {
-      return `${query} ${rawParams}`;
     }
-  }
 
-  if (params.length > 0) {
-    query = query.replace(/(\?|\$\d+)/g, () => {
-      const param = params.shift() || "";
-      return options.escapeParams ? escapeWhitespace(param) : param;
-    });
-  }
+    if (parsedParams.length > 0) {
+      query = query.replace(/(\?|\$\d+)/g, () => {
+        const param = parsedParams.shift() || "";
+        return options.paramTransformer ? options.paramTransformer(param) : param;
+      });
+    }
 
-  return query.trim();
+    return query.trim();
+  } catch (error) {
+    if (options.throwOnError) {
+      throw error;
+    }
+
+    return `${query} ${params}`;
+  }
 };

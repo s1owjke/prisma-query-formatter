@@ -81,11 +81,13 @@ Will be logged with params as:
 SELECT DISTINCT role FROM User WHERE status = "Active"
 ```
 
-To escape whitespace symbols such as `\f\n\r\t\v` in params, use the `escapeParams` option (false by default), this will allow you to output multiline strings more concisely (all your logs will be on one line).
+To escape whitespace symbols such as `\f\n\r\t\v` in params, use the `escapeWhitespace` function as `paramTransformer`, this will allow you to output multiline strings more concisely (all your logs will be on one line).
 
 ```typescript
+import { formatQuery, escapeWhitespace } from "prisma-query-formatter";
+
 prisma.$on("query", (e) => {
-  console.log(formatQuery(e.query, e.params, { escapeParams: true }));
+  console.log(formatQuery(e.query, e.params, { paramTransformer: escapeWhitespace }));
 });
 ```
 
@@ -93,4 +95,28 @@ And then, they will be displayed like this:
 
 ```text
 SELECT `Post`.`id` FROM `Post` WHERE `Post`.`title` = "first\nsecond"
+```
+
+## Custom transformers
+
+You can provide a custom `paramTransformer` function to customize how parameters are displayed.
+
+For example, to limit param length to the first 255 characters:
+
+```typescript
+import { formatQuery } from "prisma-query-formatter";
+
+const MAX_PARAM_LENGTH = 255;
+
+const limitLength = (param: string) => {
+  if (param.length <= MAX_PARAM_LENGTH) {
+    return param;
+  }
+
+  return `${param.substring(0, MAX_PARAM_LENGTH)}...`;
+};
+
+prisma.$on("query", (e) => {
+  console.log(formatQuery(e.query, e.params, { paramTransformer: limitLength(100) }));
+});
 ```
