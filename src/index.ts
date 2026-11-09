@@ -79,21 +79,29 @@ export const formatQuery = (query: string, params: string, options: FormatOption
   try {
     query = query.replace(/\s/g, " ").replace(/\s{2,}/g, " ");
 
-    const placeholders = query.match(/(\?|\$\d+)/g) || [];
+    const placeholder = /\$\d/.test(query) ? /\$\d+/g : /\?/g;
     const parsedParams = parseParams(params);
 
-    if (placeholders.length !== parsedParams.length) {
+    const usedIndexes = new Set<number>();
+    let nextIndex = 0;
+
+    const formatted = query.replace(placeholder, (match) => {
+      const index = match === "?" ? nextIndex++ : Number(match.slice(1)) - 1;
+      usedIndexes.add(index);
+
+      if (index < 0 || index >= parsedParams.length) {
+        throw new Error("Number of placeholders and params doesn't match");
+      }
+
+      const param = parsedParams[index];
+      return options.paramTransformer ? options.paramTransformer(param) : param;
+    });
+
+    if (usedIndexes.size !== parsedParams.length) {
       throw new Error("Number of placeholders and params doesn't match");
     }
 
-    if (parsedParams.length > 0) {
-      query = query.replace(/(\?|\$\d+)/g, () => {
-        const param = parsedParams.shift() || "";
-        return options.paramTransformer ? options.paramTransformer(param) : param;
-      });
-    }
-
-    return query.trim();
+    return formatted.trim();
   } catch (error) {
     if (options.throwOnError) {
       throw error;

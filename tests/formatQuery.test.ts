@@ -40,4 +40,34 @@ describe("query formatting", () => {
     const log = () => formatQuery("SELECT * FROM Post WHERE status = ?", `[]`, { throwOnError: true });
     expect(log).toThrow("Number of placeholders and params doesn't match");
   });
+
+  test("with reordered placeholders in the postgres format", () => {
+    const log = formatQuery(
+      `SELECT * FROM Post WHERE (authorId = $2 AND status = $1) ORDER BY createdAt DESC LIMIT $3 OFFSET $4`,
+      `["published",42,10,0]`,
+    );
+    expect(log).toEqual(
+      `SELECT * FROM Post WHERE (authorId = 42 AND status = "published") ORDER BY createdAt DESC LIMIT 10 OFFSET 0`,
+    );
+  });
+
+  test("with repeated placeholders in the postgres format", () => {
+    const log = formatQuery(`SELECT * FROM Post WHERE (authorId = $1 OR reviewerId = $1) LIMIT $2`, `[42,10]`);
+    expect(log).toEqual(`SELECT * FROM Post WHERE (authorId = 42 OR reviewerId = 42) LIMIT 10`);
+  });
+
+  test("with jsonb exists operator in the postgres format", () => {
+    const log = formatQuery(`SELECT id FROM Post WHERE meta ? $1 LIMIT $2`, `["tag",10]`);
+    expect(log).toEqual(`SELECT id FROM Post WHERE meta ? "tag" LIMIT 10`);
+  });
+
+  test("with two-digit placeholders in the postgres format", () => {
+    const log = formatQuery("SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10", `[1,2,3,4,5,6,7,8,9,"ten"]`);
+    expect(log).toEqual(`SELECT 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten"`);
+  });
+
+  test("should throw when some params aren't used", () => {
+    const log = () => formatQuery("SELECT * FROM Post WHERE id = $1", `[1,2]`, { throwOnError: true });
+    expect(log).toThrow("Number of placeholders and params doesn't match");
+  });
 });
