@@ -79,18 +79,27 @@ export const formatQuery = (query: string, params: string, options: FormatOption
   try {
     query = query.replace(/\s/g, " ").replace(/\s{2,}/g, " ");
 
-    const placeholders = query.match(/(\?|\$\d+)/g) || [];
     const parsedParams = parseParams(params);
+    const transform = (param: string) => (options.paramTransformer ? options.paramTransformer(param) : param);
+    const numbered = (query.match(/\$(\d+)/g) || []).map((placeholder) => Number(placeholder.slice(1)));
 
-    if (placeholders.length !== parsedParams.length) {
-      throw new Error("Number of placeholders and params doesn't match");
-    }
+    if (numbered.length > 0) {
+      // PostgreSQL-style placeholders are bound by number, not by position in the query
+      if (Math.min(...numbered) < 1 || Math.max(...numbered) > parsedParams.length) {
+        throw new Error("Number of placeholders and params doesn't match");
+      }
 
-    if (parsedParams.length > 0) {
-      query = query.replace(/(\?|\$\d+)/g, () => {
-        const param = parsedParams.shift() || "";
-        return options.paramTransformer ? options.paramTransformer(param) : param;
-      });
+      query = query.replace(/\$(\d+)/g, (_, index: string) => transform(parsedParams[Number(index) - 1]));
+    } else {
+      const placeholders = query.match(/\?/g) || [];
+
+      if (placeholders.length !== parsedParams.length) {
+        throw new Error("Number of placeholders and params doesn't match");
+      }
+
+      if (parsedParams.length > 0) {
+        query = query.replace(/\?/g, () => transform(parsedParams.shift() || ""));
+      }
     }
 
     return query.trim();
